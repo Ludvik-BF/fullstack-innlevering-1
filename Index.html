@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <title>Kantinebestilling</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Kantinebestilling</h1>
+
+    <!-- Faner -->
+    <div class="tabs">
+        <button id="bestillTab">Bestill</button>
+        <button id="adminTab">Admin</button>
+    </div>
+
+    <!-- Bruker -->
+    <div id="bestillSide">
+        <h2>Ny bestilling</h2>
+
+        <form id="orderForm">
+            <label>
+                Kunde
+                <input type="text" id="customer" required>
+            </label>
+
+            <label>
+                Produkt
+                <input type="text" id="product" required>
+            </label>
+
+            <label>
+                Antall
+                <input type="number" id="quantity" value="1" min="1">
+            </label>
+
+            <label>
+                Tid
+                <input type="time" id="time" required>
+            </label>
+
+            <button type="submit">Legg til</button>
+        </form>
+
+        <h2>Bestillinger</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Kunde</th>
+                    <th>Produkt</th>
+                    <th>Antall</th>
+                    <th>Tid</th>
+                </tr>
+            </thead>
+            <tbody id="orderTable"></tbody>
+        </table>
+    </div>
+
+    <!-- Admin -->
+    <div id="adminSide" style="display:none;">
+        <h2>Admin – oversikt</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Kunde</th>
+                    <th>Produkt</th>
+                    <th>Antall</th>
+                    <th>Tid</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="adminTable"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const orderForm = document.getElementById("orderForm");
+    const orderTable = document.getElementById("orderTable");
+    const adminTable = document.getElementById("adminTable");
+
+    const customerInput = document.getElementById("customer");
+    const productInput = document.getElementById("product");
+    const quantityInput = document.getElementById("quantity");
+    const timeInput = document.getElementById("time");
+
+    const bestillTab = document.getElementById("bestillTab");
+    const adminTab = document.getElementById("adminTab");
+    const bestillSide = document.getElementById("bestillSide");
+    const adminSide = document.getElementById("adminSide");
+
+    let orders = JSON.parse(localStorage.getItem("orders")) || [];
+
+    // bytte side
+    bestillTab.onclick = () => {
+        bestillSide.style.display = "block";
+        adminSide.style.display = "none";
+    };
+
+    adminTab.onclick = () => {
+        bestillSide.style.display = "none";
+        adminSide.style.display = "block";
+        loadAdmin();
+    };
+
+    // vise eksisterende bestillinger
+    orders.forEach(o => addRow(o));
+
+    orderForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const order = {
+            customer: customerInput.value,
+            product: productInput.value,
+            quantity: quantityInput.value,
+            time: timeInput.value
+        };
+
+        orders.push(order);
+        localStorage.setItem("orders", JSON.stringify(orders));
+
+        addRow(order);
+
+        orderForm.reset();
+        quantityInput.value = 1;
+    });
+
+    function addRow(order) {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${order.customer}</td>
+            <td>${order.product}</td>
+            <td>${order.quantity}</td>
+            <td>${order.time}</td>
+        `;
+
+        orderTable.appendChild(tr);
+    }
+
+    function loadAdmin() {
+        adminTable.innerHTML = "";
+
+        orders.forEach((order, index) => {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${order.customer}</td>
+                <td>${order.product}</td>
+                <td>${order.quantity}</td>
+                <td>${order.time}</td>
+                <td><button onclick="removeOrder(${index})">Slett</button></td>
+            `;
+
+            adminTable.appendChild(tr);
+        });
+    }
+
+    function removeOrder(index) {
+        orders.splice(index, 1);
+        localStorage.setItem("orders", JSON.stringify(orders));
+
+        orderTable.innerHTML = "";
+        orders.forEach(o => addRow(o));
+
+        loadAdmin();
+    }
+</script>
+
+</body>
+</html>
